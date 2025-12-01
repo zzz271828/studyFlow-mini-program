@@ -1,6 +1,11 @@
 {
   "pages": [
-    "pages/index/index"
+    "pages/index/index",
+    "pages/rooms/rooms.js",
+    "pages/rooms/rooms",
+    "pages/room/rooom",
+    "pages/confirm",
+    "pages/mybookings/mybookings"
   ],
   "window": {
     "navigationBarTextStyle": "black",
