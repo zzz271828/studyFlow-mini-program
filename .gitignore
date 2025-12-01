@@ -1,0 +1,11 @@
+# WeChat Mini Program ignore
+project.private.config.json
+miniprogram_npm/
+node_modules/
+dist/
+.idea/
+.DS_Store
+
+# cloud development
+cloudfunctions/*/node_modules
+cloudfunctions/*/package-lock.json
