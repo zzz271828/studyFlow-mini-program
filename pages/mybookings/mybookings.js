@@ -1,66 +1,17 @@
 // pages/mybookings/mybookings.js
 Page({
-
-  /**
-   * Page initial data
-   */
   data: {
-
+    bookings: []
   },
 
-  /**
-   * Lifecycle function--Called when page load
-   */
-  onLoad(options) {
-
-  },
-
-  /**
-   * Lifecycle function--Called when page is initially rendered
-   */
-  onReady() {
-
-  },
-
-  /**
-   * Lifecycle function--Called when page show
-   */
   onShow() {
+    const bookings = wx.getStorageSync('bookings') || [];
+    bookings.sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
+    this.setData({ bookings });
 
-  },
-
-  /**
-   * Lifecycle function--Called when page hide
-   */
-  onHide() {
-
-  },
-
-  /**
-   * Lifecycle function--Called when page unload
-   */
-  onUnload() {
-
-  },
-
-  /**
-   * Page event handler function--Called when user drop down
-   */
-  onPullDownRefresh() {
-
-  },
-
-  /**
-   * Called when page reach bottom
-   */
-  onReachBottom() {
-
-  },
-
-  /**
-   * Called when user click on the top right corner to share
-   */
-  onShareAppMessage() {
-
+    // 告诉自定义 tabBar：当前是第 1 个 tab（我的预约）
+    if (typeof this.getTabBar === 'function' && this.getTabBar()) {
+      this.getTabBar().setSelected(1);
+    }
   }
-})
+});

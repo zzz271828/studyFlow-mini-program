@@ -1,0 +1,12 @@
+<!--tabBar/index.wxml-->
+<view class="tabbar-container">
+  <block wx:for="{{tabs}}" wx:key="pagePath">
+    <view class="tab-item"
+          data-index="{{index}}"
+          bindtap="onTabTap">
+      <view class="tab-text {{selected === index ? 'tab-text-active' : 'tab-text-normal'}}">
+        {{item.text}}
+      </view>
+    </view>
+  </block>
+</view>

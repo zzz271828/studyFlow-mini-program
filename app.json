@@ -3,7 +3,8 @@
     "pages/index/index",
     "pages/rooms/rooms",
     "pages/room/room",
-    "pages/mybookings/mybookings"
+    "pages/mybookings/mybookings",
+    "tabBar/index"
   ],
   "window": {
     "navigationBarTitleText": "StudyFlow",
