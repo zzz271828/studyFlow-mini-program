@@ -14,16 +14,20 @@
   },
   "tabBar": {
     "color": "#666666",
-    "selectedColor": "#1AAD19",
+    "selectedColor": "#1AAD22",
     "backgroundColor": "#ffffff",
     "list": [
       {
         "pagePath": "pages/index/index",
-        "text": "自习室"
+        "text": "自习室",
+        "iconPath": "assets/tabBar/self_study_room.png",
+        "selectedIconPath": "assets/tabBar/self_study_room_active.png"
       },
       {
         "pagePath": "pages/mybookings/mybookings",
-        "text": "我的预约"
+        "text": "我的预约",
+        "iconPath": "assets/tabBar/booking.png",
+        "selectedIconPath": "assets/tabBar/booking_active.png"
       }
     ]
   },
