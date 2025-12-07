@@ -1,29 +1,38 @@
-// index.js
-const app = getApp();
-
+// pages/index/index.js
 Page({
   data: {
-    rooms: []
+    rooms: [
+      {
+        id: 1,
+        name: "Hargrave Andrew Library",
+        location: "13 Collage Walk",
+        openTime: "10:00",
+        closeTime: "18:00",
+        availableSeats: 64
+      },
+      {
+        id: 2,
+        name: "LTB",
+        location: "19 Ancora Imparo Wy",
+        openTime: "09:00",
+        closeTime: "18:00",
+        availableSeats: 512
+      },
+      {
+        id: 3,
+        name: "slm 24/7",
+        location: "Foyer/40 Exhibition Walk",
+        openTime: "00:00",
+        closeTime: "24:00",
+        availableSeats: 1024
+      }
+    ]
   },
 
-  onLoad() {
-    this.setData({
-      rooms: app.globalData.rooms
-    });
-  },
-
-  onShow() {
-    // 告诉自定义 tabBar：当前是第 0 个 tab（自习室）
-    if (typeof this.getTabBar === 'function' && this.getTabBar()) {
-      this.getTabBar().setSelected(0);
-    }
-  },
-
-  onRoomTap(event) {
-    const roomId = event.currentTarget.dataset.roomId;
+  onRoomTap(e) {
+    const roomId = e.currentTarget.dataset.id;
     wx.navigateTo({
-      url: `/pages/room/room ? roomId=${roomId}`
+      url: `/pages/room/room?id=${roomId}`
     });
   }
 });
-

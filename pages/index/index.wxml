@@ -1,7 +1,25 @@
 <!--index.wxml-->
-<navigation-bar title="Weixin" back="{{false}}" color="black" background="#FFF"></navigation-bar>
-<scroll-view class="scrollarea" scroll-y type="list">
-  <view class="container">
-    Weixin
+<view class="container">
+  <view class="header">
+    <text class="title">一键自习座 StudyFlow</text>
+    <text class="subtitle">选择自习室，轻松一键预约座位</text>
   </view>
-</scroll-view>
+
+  <view class="section-title">可用自习室</view>
+
+  <view
+    class="room-card"
+    wx:for="{{rooms}}"
+    wx:key="id"
+    bindtap="onRoomTap"
+    data-id="{{item.id}}"
+  >
+    <view class="room-name">{{item.name}}</view>
+    <view class="room-info">
+      <text>{{item.location}}</text>
+      <text> · 今日空位：{{item.availableSeats}}</text>
+    </view>
+    <view class="room-time">开放时间：{{item.openTime}} - {{item.closeTime}}</view>
+  </view>
+</view>
+

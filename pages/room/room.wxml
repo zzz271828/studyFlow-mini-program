@@ -1,2 +1,56 @@
-<!--pages/room/rooom.wxml-->
-<text>pages/room/rooom.wxml</text>
+<view class="page">
+  <!-- 房间信息卡片 -->
+  <view class="card room-info">
+    <view class="room-name">{{room.name}}</view>
+    <view class="room-location">{{room.location}}</view>
+    <view class="room-desc">{{room.description}}</view>
+    <view class="room-footer">
+      <text>地址：{{room.location}}</text>
+      <text>今日空位：{{room.todaySeats}}</text>
+      <text>开放时间：{{room.openTime}}</text>
+    </view>
+  </view>
+
+  <!-- 座位区域 -->
+  <view class="card">
+    <view class="section-title">请选择一个座位（示例 4 个）</view>
+
+    <view class="seat-grid">
+      <!-- 两行 -->
+      <view class="seat-row">
+        <view class="{{seats[0].status === 'selected' ? 'seat seat-selected' : 'seat seat-free'}}"
+              data-seat-id="{{seats[0].id}}"
+              bindtap="onSeatTap">
+          {{seats[0].label}}
+        </view>
+
+
+        <view class="{{seats[1].status === 'selected' ? 'seat seat-selected' : 'seat seat-free'}}"
+              data-seat-id="{{seats[1].id}}"
+              bindtap="onSeatTap">
+          {{seats[1].label}}
+        </view>
+
+        <view class="{{seats[2].status === 'selected' ? 'seat seat-selected' : 'seat seat-free'}}"
+              data-seat-id="{{seats[2].id}}"
+              bindtap="onSeatTap">
+          {{seats[2].label}}
+        </view>
+
+        <view class="{{seats[3].status === 'selected' ? 'seat seat-selected' : 'seat seat-free'}}"
+              data-seat-id="{{seats[3].id}}"
+              bindtap="onSeatTap">
+          {{seats[3].label}}
+        </view>
+        
+      </view>
+    </view>
+  </view>
+
+  <!-- 底部按钮 -->
+  <view class="card">
+    <view class="primary-button" bindtap="onConfirm">
+      确认选座
+    </view>
+  </view>
+</view>
