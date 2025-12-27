@@ -24,17 +24,21 @@ function minutesToTime(mins) {
   return `${h}:${m}`;
 }
 
-function buildTimeSlots(openTime, closeTime, stepMinutes = 30, durationMinutes = 60) {
+// Build a list like ["09:00","09:30",...,"18:00"]
+function buildTimes(openTime, closeTime, stepMinutes = 30) {
   const start = timeToMinutes(openTime);
   const end = timeToMinutes(closeTime);
-
-  const slots = [];
-  for (let t = start; t + durationMinutes <= end; t += stepMinutes) {
-    const s = minutesToTime(t);
-    const e = minutesToTime(t + durationMinutes);
-    slots.push(`${s} - ${e}`);
+  const list = [];
+  for (let t = start; t <= end; t += stepMinutes) {
+    list.push(minutesToTime(t));
   }
-  return slots;
+  return list;
+}
+
+// End times must be strictly after start time
+function filterEndTimes(allTimes, startTime) {
+  const start = timeToMinutes(startTime);
+  return allTimes.filter(t => timeToMinutes(t) > start);
 }
 
 Page({
@@ -42,10 +46,13 @@ Page({
     room: {},
     seats: [],
     selectedSeatId: null,
-    selectedTimeRange: null,
-    timeSlots: [],
+
+    // multi-wheel time picker
     showTimePicker: false,
-    timeSlotIndex: 0
+    timeColumns: [[], []], // [startTimes, endTimes]
+    timeIndex: [0, 0],
+    selectedStartTime: null,
+    selectedEndTime: null
   },
 
   onLoad() {
@@ -53,12 +60,21 @@ Page({
     const openTime = room.openTime || '08:00';
     const closeTime = room.closeTime || '22:00';
 
-    const timeSlots = buildTimeSlots(openTime, closeTime, 30, 60);
+    const allTimes = buildTimes(openTime, closeTime, 30);
+
+    // Start times can't be the last one (can't start at closing time)
+    const startTimes = allTimes.slice(0, -1);
+
+    const defaultStart = startTimes[0];
+    const endTimes = filterEndTimes(allTimes, defaultStart);
 
     this.setData({
       room,
       seats: generateSeats(),
-      timeSlots
+      timeColumns: [startTimes, endTimes],
+      timeIndex: [0, 0],
+      selectedStartTime: defaultStart,
+      selectedEndTime: endTimes[0] || null
     });
   },
 
@@ -79,39 +95,88 @@ Page({
       this.setData({
         seats: updatedSeats,
         selectedSeatId: null,
-        selectedTimeRange: null
+        showTimePicker: false
       });
       return;
     }
 
     this.setData({
       seats: updatedSeats,
-      selectedSeatId: selected.id,
-      selectedTimeRange: null
+      selectedSeatId: selected.id
     });
 
+    // open time picker
     this.pickTimeSlot();
   },
 
   pickTimeSlot() {
-    const slots = this.data.timeSlots;
-    console.log('pickTimeSlot called, slots =', slots);
+    this.setData({ showTimePicker: true });
+  },
 
-    if (!slots || slots.length === 0) {
-      wx.showToast({ title: '暂无可预约时间', icon: 'none' });
+  onCloseTimePicker() {
+    this.setData({ showTimePicker: false });
+  
+    if (this.data.selectedSeatId && this.data.selectedStartTime && this.data.selectedEndTime) {
+      wx.showToast({
+        title: `${this.data.selectedSeatId} ${this.data.selectedStartTime}-${this.data.selectedEndTime}`,
+        icon: 'none',
+        duration: 2000
+      });
+    }
+  },
+  
+
+  // Fires when user scrolls a column
+  onTimeColumnChange(e) {
+    const { column, value } = e.detail;
+    const [startTimes] = this.data.timeColumns;
+
+    // If start column changes, rebuild end column
+    if (column === 0) {
+      const newStart = startTimes[value];
+
+      const openTime = this.data.room.openTime || '08:00';
+      const closeTime = this.data.room.closeTime || '22:00';
+      const allTimes = buildTimes(openTime, closeTime, 30);
+      const newEndTimes = filterEndTimes(allTimes, newStart);
+
+      this.setData({
+        timeColumns: [startTimes, newEndTimes],
+        timeIndex: [value, 0],
+        selectedStartTime: newStart,
+        selectedEndTime: newEndTimes[0] || null
+      });
       return;
     }
-    this.setData({ showTimePicker: true});
 
-    wx.showActionSheet({
-      itemList: slots,
-      success: (res) => {
-        this.setData({ selectedTimeRange: slots[res.tapIndex] });
-        wx.showToast({ title: '已选择时间', icon: 'success' });
-      },
-      fail: (err) => {
-        console.log('actionSheet cancelled/fail', err);
-      }
+    // end column scrolled (keep current start)
+    const [, endTimes] = this.data.timeColumns;
+    const idx = [...this.data.timeIndex];
+    idx[column] = value;
+
+    this.setData({
+      timeIndex: idx,
+      selectedEndTime: endTimes[value]
+    });
+  },
+
+  // Fires when user confirms multiSelector
+  onTimeChange(e) {
+    const [startIdx, endIdx] = e.detail.value;
+    const [startTimes, endTimes] = this.data.timeColumns;
+  
+    const selectedStartTime = startTimes[startIdx];
+    const selectedEndTime = endTimes[endIdx];
+  
+    this.setData({
+      timeIndex: [startIdx, endIdx],
+      selectedStartTime,
+      selectedEndTime
+    });
+  
+    wx.showToast({
+      title: '时间已选择',
+      icon: 'success'
     });
   },
 
@@ -121,7 +186,7 @@ Page({
       return;
     }
 
-    if (!this.data.selectedTimeRange) {
+    if (!this.data.selectedStartTime || !this.data.selectedEndTime) {
       wx.showToast({ title: '请选择预约时间', icon: 'none' });
       return;
     }
@@ -130,24 +195,10 @@ Page({
       title: '预约信息确认',
       content:
         `房间：${this.data.room.name || '未命名房间'}\n` +
-        `地址：${this.data.room.location || ''}\n` +
         `座位：${this.data.selectedSeatId}\n` +
-        `时间：${this.data.selectedTimeRange}\n\n` +
+        `时间：${this.data.selectedStartTime} - ${this.data.selectedEndTime}\n\n` +
         `(当前仍是前端模拟，尚未写入后台)`,
       showCancel: false
     });
-  },
-
-  onTimeChange(e) {
-    const idx = Number(e.detail.value);
-    this.setData({
-      timeSlotIndex: idx,
-      selectedTimeRange: this.data.timeSlots[idx]
-    });
-  },
-  
-  onCloseTimePicker() {
-    this.setData({ showTimePicker: false });
   }
-  
 });

@@ -47,8 +47,43 @@
 
     <view wx:if="{{selectedSeatId}}" class="hint">
       已选座位：{{selectedSeatId}}
-      <text wx:if="{{selectedTimeRange}}">｜时间：{{selectedTimeRange}}</text>
+      <text wx:if="{{selectedStartTime && selectedEndTime}}">
+        ｜时间：{{selectedStartTime}} - {{selectedEndTime}}
+      </text>
     </view>
+
+    <!-- mask -->
+    <view wx:if="{{showTimePicker}}" class="picker-mask" bindtap="onCloseTimePicker"></view>
+
+    <!-- bottom panel -->
+    <view wx:if="{{showTimePicker}}" class="picker-panel">
+      <view class="picker-title">选择开始和结束时间</view>
+
+      <picker
+        mode="multiSelector"
+        range="{{timeColumns}}"
+        value="{{timeIndex}}"
+        bindchange="onTimeChange"
+        bindcolumnchange="onTimeColumnChange"
+      >
+        <view class="picker-item">
+          {{selectedStartTime}} - {{selectedEndTime}}
+        </view>
+      </picker>
+
+      <view class="picker-actions">
+        <view class="picker-btn" bindtap="onCloseTimePicker">完成</view>
+      </view>
+    </view>
+
+    <!-- Bottom Confirm Button -->
+    <view class="bottom-bar">
+      <button class="confirm-btn" bindtap="onConfirm">
+        确认预约
+      </button>
+    </view>
+
+
 
   </view>
 </view>
