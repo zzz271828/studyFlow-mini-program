@@ -10,8 +10,9 @@ App({
       id: 'room-demo',
       name: 'Hargrave Andrew Library',
       location: '13 College Walk',
-      todaySeats: 4,
-      openTime: '09:00 - 18:00',
+      todaySeats: 20,
+      openTime: '09:00',
+      closeTime: '18:00',
       description: 'demo room, for demostration purpose ONLY. showcase of the selecting seat feature.'
     }
   }

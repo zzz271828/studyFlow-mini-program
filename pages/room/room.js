@@ -1,37 +1,84 @@
 // pages/room/room.js
 const app = getApp();
 
+/**
+ * generate 20 seats, with the number A1 - A10, B1 - B10
+ */
+function generateSeats() {
+  const seats = [];
+  const row = ['A', 'B'];
+
+  rows.forEach(row => {
+    const id = '${row}${i}';
+    seats.push({ id, label: id, status: 'free'});
+  });
+  return seats;
+}
+
+/**
+ * convert HH;MM into minuts
+ */
+function minutsToTime(mins) {
+  const h = String(Math.floor(min / 60)).padStart(2, '0');
+  const m = String(min % 60).padStart(2, '0');
+
+  return '${h}:${m}';
+}
+
+/**
+ * generate pickable time according to the opening time.
+ * 30 min as one time interval
+ */
+function buildTimeSlots(openTime, closeTime, stepMinuts = 30, durationMinuts = 60) {
+  const start = timeMinuts(openTime);
+  const end = tiemToMinuts(closeTime);
+
+  const slots = [];
+
+  for (let t = start; t + durationMinuts <= end; t += stepMinuts) {
+    const s = minutsToTime(t);
+    const e = minutsToTime(t + durationMinuts);
+    slots.push('${s} - ${e}');
+  }
+
+  return slots;
+}
 Page({
   data: {
     room: {},
-    // fcking demo
-    seats: [
-      { id: 'A1', label: 'A1', status: 'free' },
-      { id: 'A2', label: 'A2', status: 'free' },
-      { id: 'B1', label: 'B1', status: 'free' },
-      { id: 'B2', label: 'B2', status: 'free' }
-    ],
-    selectedSeatId: null
+
+    seats: [],
+
+    selectedSeatsId: null,
+
+    selectedTimeRange:null,
+
+    timeSlots:[]
   },
 
   onLoad() {
-    // 从全局拿那一间房的 info
-    this.setData({
-      room: app.globalData.room
+    const room = app.globalData.room || {};
+
+    const openTime = room.openTime || '08:00';
+    const closeTime = room.closeTime || '22:00';
+
+    const timeSlots = buildTimeSlots(openTime, closeTime, 30, 60);
+
+    this.setData( {
+      room, 
+      seats: generateSeats(),
+      timeSlots
     });
   },
 
   onSeatTap(e) {
     const seatId = e.currentTarget.dataset.seatId;
 
-    // 遍历 4 个座位，只有一个是 selected，其它都是 free
     const updatedSeats = this.data.seats.map(seat => {
       if (seat.id === seatId) {
-        // 点击当前：在 selected 和 free 之间切换
         const newStatus = seat.status === 'selected' ? 'free' : 'selected';
         return { ...seat, status: newStatus };
       } else {
-        // 其它座位全部变成 free
         return { ...seat, status: 'free' };
       }
     });
@@ -39,11 +86,46 @@ Page({
     // 找一下当前是否真有选中的座位
     const selected = updatedSeats.find(seat => seat.status === 'selected');
 
+    if (!selected) {
+      this.setData({
+        seats: updatedSeats,
+        selectedSeatId: null,
+        selectedTimeRange: null
+      });
+
+      return;
+    }
+
     this.setData({
       seats: updatedSeats,
-      selectedSeatId: selected ? selected.id : null
+      selectedSeatId: selected.id,
+      selectedTimeRange: null
     });
+
+    this.pickTimeSlot();
   },
+
+  pickTimeSlot() {
+    const slots = this.data.timeSlots;
+
+    if(!slots || slots.length === 0) {
+      wx.showToast({ title: '暂无可预约时间', icon: 'none'});
+    }
+
+    wx.showActionSheet({
+      itemList: slots,
+      success: (res) => {
+        const idx = res.tapIndex;
+        this.setData({
+          selectedTimeRange: slots[idx]
+        });
+      },
+      fail: () => {
+
+      }
+    })
+  },
+
 
   onConfirm() {
     if (!this.data.selectedSeatId) {
@@ -54,9 +136,22 @@ Page({
       return;
     }
 
+    if (!this.data.selectedTimeRane) {
+      wx.showToast ({
+        title: '请选择预约时间',
+        icon: 'none'
+      });
+
+      return;
+    }
+
     wx.showModal({
-      title: '选座成功',
-      content: `你选择了座位：${this.data.selectedSeatId}\n (当前只是示例, 不会真正写入后台)`,
+      title: '预约信息确认',
+      content:
+        `房间：${this.data.room.name || '未命名房间'}\n` +
+        `座位：${this.data.selectedSeatId}\n` +
+        `时间：${this.data.selectedTimeRange}\n\n` +
+        `(当前仍是前端模拟，尚未写入后台)`,
       showCancel: false
     });
   }
