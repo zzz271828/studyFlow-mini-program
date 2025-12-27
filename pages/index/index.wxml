@@ -2,26 +2,37 @@
 <view class="container">
   <view class="header">
     <text class="title">一键自习座 StudyFlow</text>
+    
     <text class="subtitle">选择自习室，轻松一键预约座位</text>
   </view>
 
   <view class="section-title">可用自习室</view>
 
-  <view
-    wx:for="{{rooms}}"
-    wx:key="_id"
-    class="room-card"
-    data-room-id="{{item._id}}"
-    bindtap="onRoomTap"
-  >
-    <view class="room-name">{{item.name}}</view>
-    <view class="room-meta">
-      <text>{{item.location}}</text>
-      <text> · 开放时间：{{item.openTime}} - {{item.closeTime}}</text>
-      <text> · 座位数：{{item.seatCount}}</text>
+  <view class="room-list">
+    <view
+      wx:for="{{rooms}}"
+      wx:key="_id"
+      class="room-card"
+      data-room-id="{{item._id}}"
+      bindtap="onRoomTap"
+    >
+      <view class="room-top">
+        <view class="room-name">{{item.name}}</view>
+      </view>
+
+      <view class="room-location">{{item.location}}</view>
+
+      <view class="room-info-row">
+        <view class="info-pill">开放时间：{{item.openTime}} - {{item.closeTime}}</view>
+        <view class="info-pill">座位数：{{item.seatCount}}</view>
+      </view>
+
+      <view wx:if="{{item.description}}" class="room-desc">
+        {{item.description}}
+      </view>
     </view>
-    <view wx:if="{{item.description}}" class="room-desc">{{item.description}}</view>
   </view>
+
 
 </view>
 

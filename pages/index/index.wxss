@@ -1,51 +1,102 @@
+/* pages/index/index.wxss */
+
 .container {
-  padding: 16px;
+  padding: 28rpx 24rpx 40rpx;
+  background: #f4f7fb;
+  min-height: 100vh;
 }
 
 .header {
-  margin-bottom: 16px;
+  margin-bottom: 18rpx;
 }
 
 .title {
   display: block;
-  font-size: 22px;
-  font-weight: 600;
-  margin-bottom: 4px;
+  font-size: 40rpx;     
+  font-weight: 700;
+  color: #0f172a;
 }
+
 
 .subtitle {
   display: block;
-  font-size: 13px;
-  color: #888;
+  margin-top: 10rpx;
+  font-size: 24rpx;
+  color: #64748b;
 }
 
 .section-title {
-  font-size: 14px;
-  font-weight: 500;
-  margin: 12px 0;
+  margin: 16rpx 0 10rpx;
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.room-list {
+  display: flex;
+  flex-direction: column;
+  gap: 18rpx;
 }
 
 .room-card {
-  background-color: #ffffff;
-  padding: 12px;
-  border-radius: 8px;
-  margin-bottom: 10px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  background: #ffffff;
+  border-radius: 18rpx;
+  padding: 22rpx;
+  box-shadow: 0 8rpx 22rpx rgba(37, 99, 235, 0.08);
+  border: 1rpx solid rgba(37, 99, 235, 0.08);
+}
+
+.room-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .room-name {
-  font-size: 16px;
-  font-weight: 500;
-  margin-bottom: 4px;
+  font-size: 30rpx;
+  font-weight: 700;
+  color: #0f172a;
 }
 
-.room-info {
-  font-size: 13px;
-  color: #666;
-  margin-bottom: 2px;
+.room-tag {
+  font-size: 22rpx;
+  padding: 6rpx 12rpx;
+  border-radius: 999rpx;
+  background: #e8f0ff;
+  color: #2563eb;
+  font-weight: 600;
 }
 
-.room-time {
-  font-size: 12px;
-  color: #999;
+.room-location {
+  margin-top: 8rpx;
+  font-size: 24rpx;
+  color: #6b7280;
+}
+
+.room-info-row {
+  margin-top: 12rpx;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10rpx;
+}
+
+.info-pill {
+  font-size: 22rpx;
+  color: #475569;
+  background: #f1f5f9;
+  border: 1rpx solid #e2e8f0;
+  padding: 8rpx 12rpx;
+  border-radius: 999rpx;
+}
+
+.room-desc {
+  margin-top: 10rpx;
+  font-size: 22rpx;
+  color: #94a3b8;
+
+  /* limit to 2 lines */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
 }

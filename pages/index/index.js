@@ -20,7 +20,7 @@ Page({
   
     try {
       const res = await db.collection('rooms').get();
-      console.log('rooms from db:', res.data); // ✅ inside try
+      console.log('rooms from db:', res.data); 
   
       this.setData({
         rooms: res.data || [],
