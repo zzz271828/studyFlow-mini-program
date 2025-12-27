@@ -8,18 +8,20 @@
   <view class="section-title">可用自习室</view>
 
   <view
-    class="room-card"
     wx:for="{{rooms}}"
-    wx:key="id"
+    wx:key="_id"
+    class="room-card"
+    data-room-id="{{item._id}}"
     bindtap="onRoomTap"
-    data-id="{{item.id}}"
   >
     <view class="room-name">{{item.name}}</view>
-    <view class="room-info">
+    <view class="room-meta">
       <text>{{item.location}}</text>
-      <text> · 今日空位：{{item.availableSeats}}</text>
+      <text> · 开放时间：{{item.openTime}} - {{item.closeTime}}</text>
+      <text> · 座位数：{{item.seatCount}}</text>
     </view>
-    <view class="room-time">开放时间：{{item.openTime}} - {{item.closeTime}}</view>
+    <view wx:if="{{item.description}}" class="room-desc">{{item.description}}</view>
   </view>
+
 </view>
 

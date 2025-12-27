@@ -2,6 +2,11 @@
 App({
   onLaunch() {
     console.log('StudyFlow mini program lauched');
+
+    wx.cloud.init({
+      env: 'cloud1-0gu9bceye011472e',
+      traceUser: true
+    });
   },
 
   globalData: {

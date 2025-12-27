@@ -1,38 +1,37 @@
 // pages/index/index.js
+const db = wx.cloud.database();
+
 Page({
   data: {
-    rooms: [
-      {
-        id: 1,
-        name: "Hargrave Andrew Library",
-        location: "13 Collage Walk",
-        openTime: "10:00",
-        closeTime: "18:00",
-        availableSeats: 64
-      },
-      {
-        id: 2,
-        name: "LTB",
-        location: "19 Ancora Imparo Wy",
-        openTime: "09:00",
-        closeTime: "18:00",
-        availableSeats: 512
-      },
-      {
-        id: 3,
-        name: "slm 24/7",
-        location: "Foyer/40 Exhibition Walk",
-        openTime: "00:00",
-        closeTime: "24:00",
-        availableSeats: 1024
-      }
-    ]
+    rooms: [],
+    loading: true
   },
 
-  onRoomTap(e) {
-    const roomId = e.currentTarget.dataset.id;
-    wx.navigateTo({
-      url: `/pages/room/room?id=${roomId}`
-    });
-  }
+  onLoad() {
+    this.loadRooms();
+  },
+
+  onPullDownRefresh() {
+    this.loadRooms(true);
+  },
+
+  async loadRooms(isPullDown = false) {
+    this.setData({ loading: true });
+  
+    try {
+      const res = await db.collection('rooms').get();
+      console.log('rooms from db:', res.data); // ✅ inside try
+  
+      this.setData({
+        rooms: res.data || [],
+        loading: false
+      });
+    } catch (err) {
+      console.error('loadRooms failed:', err);
+      wx.showToast({ title: '加载自习室失败', icon: 'none' });
+      this.setData({ loading: false });
+    } finally {
+      if (isPullDown) wx.stopPullDownRefresh();
+    }
+  },  
 });
