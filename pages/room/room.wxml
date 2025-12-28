@@ -6,7 +6,7 @@
     <view class="room-desc">{{room.description}}</view>
     <view class="room-footer">
       <text>地址：{{room.location}}</text>
-      <text>今日空位：{{room.todaySeats}}</text>
+      <text>座位数：{{room.seatCount}}</text>
       <text>开放时间：{{room.openTime}} - {{room.closeTime}}</text>
     </view>
   </view>
@@ -26,21 +26,8 @@
         {{item.label}}
       </view>
 
-      <view wx:if="{{showTimePicker}}" class="picker-mask" bindtap="onCloseTimePicker"></view>
 
-      <view wx:if="{{showTimePicker}}" class="picker-panel">
-        <view class="picker-title">选择时间</view>
 
-        <picker mode="selector" range="{{timeSlots}}" value="{{timeSlotIndex}}" bindchange="onTimeChange">
-          <view class="picker-item">
-            {{selectedTimeRange || '点击选择时间段'}}
-          </view>
-        </picker>
-
-        <view class="picker-actions">
-          <view class="picker-btn" bindtap="onCloseTimePicker">完成</view>
-        </view>
-      </view>
 
 
     </view>

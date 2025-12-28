@@ -33,5 +33,15 @@ Page({
     } finally {
       if (isPullDown) wx.stopPullDownRefresh();
     }
-  },  
+  }, 
+
+  onRoomTap(e) {
+    const roomId = e.currentTarget.dataset.roomId;
+
+    if(!roonId) return;
+
+    wx.navigateTo({
+      url: '/pages/room/room?roomId=${roomId}'
+    });
+  }
 });
