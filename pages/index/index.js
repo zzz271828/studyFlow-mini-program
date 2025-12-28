@@ -17,11 +17,9 @@ Page({
 
   async loadRooms(isPullDown = false) {
     this.setData({ loading: true });
-  
+
     try {
       const res = await db.collection('rooms').get();
-      console.log('rooms from db:', res.data); 
-  
       this.setData({
         rooms: res.data || [],
         loading: false
@@ -33,15 +31,19 @@ Page({
     } finally {
       if (isPullDown) wx.stopPullDownRefresh();
     }
-  }, 
+  },
 
   onRoomTap(e) {
+    // IMPORTANT: matches data-room-id in your WXML
     const roomId = e.currentTarget.dataset.roomId;
+    if (!roomId) {
+      wx.showToast({ title: '缺少 roomId', icon: 'none' });
+      return;
+    }
 
-    if(!roonId) return;
-
+    // IMPORTANT: must use backticks OR string concat
     wx.navigateTo({
-      url: '/pages/room/room?roomId=${roomId}'
+      url: `/pages/room/room?roomId=${encodeURIComponent(roomId)}`
     });
   }
 });

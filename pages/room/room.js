@@ -1,18 +1,6 @@
-// pages/room/room.js
-const app = getApp();
+const db = wx.cloud.database();
 
-function generateSeats() {
-  const seats = [];
-  const rows = ['A', 'B'];
-  rows.forEach(r => {
-    for (let i = 1; i <= 10; i++) {
-      const id = `${r}${i}`;
-      seats.push({ id, label: id, status: 'free' });
-    }
-  });
-  return seats;
-}
-
+// Helper functions for time calculation
 function timeToMinutes(hhmm) {
   const [h, m] = hhmm.split(':').map(Number);
   return h * 60 + m;
@@ -24,7 +12,6 @@ function minutesToTime(mins) {
   return `${h}:${m}`;
 }
 
-// Build a list like ["09:00","09:30",...,"18:00"]
 function buildTimes(openTime, closeTime, stepMinutes = 30) {
   const start = timeToMinutes(openTime);
   const end = timeToMinutes(closeTime);
@@ -35,7 +22,6 @@ function buildTimes(openTime, closeTime, stepMinutes = 30) {
   return list;
 }
 
-// End times must be strictly after start time
 function filterEndTimes(allTimes, startTime) {
   const start = timeToMinutes(startTime);
   return allTimes.filter(t => timeToMinutes(t) > start);
@@ -43,44 +29,85 @@ function filterEndTimes(allTimes, startTime) {
 
 Page({
   data: {
+    roomId: null,
     room: {},
     seats: [],
     selectedSeatId: null,
-
-    // multi-wheel time picker
     showTimePicker: false,
-    timeColumns: [[], []], // [startTimes, endTimes]
+    timeColumns: [[], []],
     timeIndex: [0, 0],
     selectedStartTime: null,
-    selectedEndTime: null
+    selectedEndTime: null,
+    loading: true
   },
 
-  onLoad() {
-    const room = app.globalData.room || {};
-    const openTime = room.openTime || '08:00';
-    const closeTime = room.closeTime || '22:00';
+  async onLoad(options) {
+    const roomId = options.roomId || "ecf92658694f674c01208de639c4c735"; // Fallback to your demo ID
+    console.log('[room.onLoad] roomId =', roomId);
+    
+    this.setData({ roomId });
+    await this.loadRoomFromDB(roomId);
+  },
 
-    const allTimes = buildTimes(openTime, closeTime, 30);
+  async loadRoomFromDB(roomId) {
+    wx.showLoading({ title: '加载中...' });
+    try {
+      // 1. Fetch Room Details
+      const res = await db.collection('rooms').doc(roomId).get();
+      const room = res.data;
+      console.log('[loadRoomFromDB] room found:', room);
 
-    // Start times can't be the last one (can't start at closing time)
-    const startTimes = allTimes.slice(0, -1);
+      // 2. Fetch Seats
+      let seatRes = await db.collection('roomSeats').where({ roomId }).get();
+      console.log('[loadRoomFromDB] initial seat count:', seatRes.data.length);
 
-    const defaultStart = startTimes[0];
-    const endTimes = filterEndTimes(allTimes, defaultStart);
+      // 3. AUTO-SEED: If no seats exist, call your cloud function automatically
+      if (seatRes.data.length === 0) {
+        console.log('[loadRoomFromDB] No seats found. Seeding now...');
+        wx.showLoading({ title: '正在初始化座位...' });
+        
+        await wx.cloud.callFunction({
+          name: 'seedRoomSeats',
+          data: { roomId, seatCount: room.seatCount || 20 }
+        });
+        
+        // Fetch again after seeding
+        seatRes = await db.collection('roomSeats').where({ roomId }).get();
+      }
 
-    this.setData({
-      room,
-      seats: generateSeats(),
-      timeColumns: [startTimes, endTimes],
-      timeIndex: [0, 0],
-      selectedStartTime: defaultStart,
-      selectedEndTime: endTimes[0] || null
-    });
+      // 4. Setup Time Picker
+      const openT = room.openTime || '09:00';
+      const closeT = room.closeTime || '18:00';
+      const step = room.timeStep || 30;
+      const allTimes = buildTimes(openT, closeT, step);
+      const startTimes = allTimes.slice(0, -1);
+      const defaultStart = startTimes[0];
+      const endTimes = filterEndTimes(allTimes, defaultStart);
+
+      this.setData({
+        room,
+        seats: seatRes.data.map(s => ({
+          id: s.seatId,
+          label: s.label,
+          status: 'free'
+        })),
+        timeColumns: [startTimes, endTimes],
+        timeIndex: [0, 0],
+        selectedStartTime: defaultStart,
+        selectedEndTime: endTimes[0] || null,
+        loading: false
+      });
+
+    } catch (err) {
+      console.error('[loadRoomFromDB] failed:', err);
+      wx.showToast({ title: '房间加载失败', icon: 'none' });
+    } finally {
+      wx.hideLoading();
+    }
   },
 
   onSeatTap(e) {
     const seatId = e.currentTarget.dataset.seatId;
-
     const updatedSeats = this.data.seats.map(seat => {
       if (seat.id === seatId) {
         const newStatus = seat.status === 'selected' ? 'free' : 'selected';
@@ -89,55 +116,21 @@ Page({
       return { ...seat, status: 'free' };
     });
 
-    const selected = updatedSeats.find(seat => seat.status === 'selected');
-
-    if (!selected) {
-      this.setData({
-        seats: updatedSeats,
-        selectedSeatId: null,
-        showTimePicker: false
-      });
-      return;
-    }
-
+    const selected = updatedSeats.find(s => s.status === 'selected');
     this.setData({
       seats: updatedSeats,
-      selectedSeatId: selected.id
+      selectedSeatId: selected ? selected.id : null,
+      showTimePicker: !!selected
     });
-
-    // open time picker
-    this.pickTimeSlot();
   },
 
-  pickTimeSlot() {
-    this.setData({ showTimePicker: true });
-  },
-
-  onCloseTimePicker() {
-    this.setData({ showTimePicker: false });
-  
-    if (this.data.selectedSeatId && this.data.selectedStartTime && this.data.selectedEndTime) {
-      wx.showToast({
-        title: `${this.data.selectedSeatId} ${this.data.selectedStartTime}-${this.data.selectedEndTime}`,
-        icon: 'none',
-        duration: 2000
-      });
-    }
-  },
-  
-
-  // Fires when user scrolls a column
   onTimeColumnChange(e) {
     const { column, value } = e.detail;
     const [startTimes] = this.data.timeColumns;
 
-    // If start column changes, rebuild end column
     if (column === 0) {
       const newStart = startTimes[value];
-
-      const openTime = this.data.room.openTime || '08:00';
-      const closeTime = this.data.room.closeTime || '22:00';
-      const allTimes = buildTimes(openTime, closeTime, 30);
+      const allTimes = buildTimes(this.data.room.openTime, this.data.room.closeTime, this.data.room.timeStep);
       const newEndTimes = filterEndTimes(allTimes, newStart);
 
       this.setData({
@@ -146,59 +139,25 @@ Page({
         selectedStartTime: newStart,
         selectedEndTime: newEndTimes[0] || null
       });
-      return;
+    } else {
+      const idx = [...this.data.timeIndex];
+      idx[1] = value;
+      this.setData({
+        timeIndex: idx,
+        selectedEndTime: this.data.timeColumns[1][value]
+      });
     }
-
-    // end column scrolled (keep current start)
-    const [, endTimes] = this.data.timeColumns;
-    const idx = [...this.data.timeIndex];
-    idx[column] = value;
-
-    this.setData({
-      timeIndex: idx,
-      selectedEndTime: endTimes[value]
-    });
-  },
-
-  // Fires when user confirms multiSelector
-  onTimeChange(e) {
-    const [startIdx, endIdx] = e.detail.value;
-    const [startTimes, endTimes] = this.data.timeColumns;
-  
-    const selectedStartTime = startTimes[startIdx];
-    const selectedEndTime = endTimes[endIdx];
-  
-    this.setData({
-      timeIndex: [startIdx, endIdx],
-      selectedStartTime,
-      selectedEndTime
-    });
-  
-    wx.showToast({
-      title: '时间已选择',
-      icon: 'success'
-    });
   },
 
   onConfirm() {
-    if (!this.data.selectedSeatId) {
-      wx.showToast({ title: '请先选择一个座位', icon: 'none' });
-      return;
-    }
-
-    if (!this.data.selectedStartTime || !this.data.selectedEndTime) {
-      wx.showToast({ title: '请选择预约时间', icon: 'none' });
-      return;
-    }
-
     wx.showModal({
-      title: '预约信息确认',
-      content:
-        `房间：${this.data.room.name || '未命名房间'}\n` +
-        `座位：${this.data.selectedSeatId}\n` +
-        `时间：${this.data.selectedStartTime} - ${this.data.selectedEndTime}\n\n` +
-        `(当前仍是前端模拟，尚未写入后台)`,
-      showCancel: false
+      title: '确认预约',
+      content: `座位: ${this.data.selectedSeatId}\n时间: ${this.data.selectedStartTime} - ${this.data.selectedEndTime}`,
+      success: (res) => {
+        if (res.confirm) {
+          wx.showToast({ title: '预约成功' });
+        }
+      }
     });
   }
 });
